@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Quản trị | E-com</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background-color: #f1f5f9; }
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.7);
+      display: none; justify-content: center; align-items: center;
+      z-index: 10000;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="admin-loading">
+    <div style="font-weight: 600; color: var(--primary-color);">Đang tải dữ liệu...</div>
+  </div>
+
+  <header>
+    <div class="nav-container">
+      <a href="admin.html" class="logo">E-com Admin</a>
+      <nav class="nav-links">
+        <a href="admin.html" class="active">Dashboard</a>
+        <a href="index.html" target="_blank">Xem Cửa hàng ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="admin-header">
+      <h1 class="page-title" style="margin: 0;">Dashboard</h1>
+      <button class="btn btn-primary" id="btn-add-product">+ Thêm sản phẩm mới</button>
+    </div>
+
+    <div class="admin-grid">
+      <div class="stat-card">
+        <div class="stat-title">TỔNG SẢN PHẨM</div>
+        <div class="stat-value" id="stat-products">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">TỔNG ĐƠN HÀNG</div>
+        <div class="stat-value" id="stat-orders">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">DOANH THU ƯỚC TÍNH</div>
+        <div class="stat-value" id="stat-revenue">0 đ</div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Danh sách hệ thống sản phẩm</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Hình ảnh</th>
+            <th>Tên sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Tồn kho</th>
+            <th>Giá bán (VNĐ)</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="admin-product-list">
+          <!-- Render from JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-container" style="margin-top: 2rem;">
+      <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Quản lý Đơn hàng toàn cục</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Mã đơn</th>
+            <th>Khách hàng</th>
+            <th>Ngày mua</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="admin-global-orders-list">
+          <!-- Render from JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-container" style="margin-top: 2rem;">
+      <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Quản lý Khách hàng</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên khách hàng</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Ngày đăng ký</th>
+            <th>Tổng chi tiêu</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="admin-customer-list">
+          <!-- Render from JS -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal Thêm Sản Phẩm -->
+  <div class="modal" id="product-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Thêm Sản phẩm</h2>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      <form id="product-form">
+        <div class="form-group">
+          <label>Tên sản phẩm *</label>
+          <input type="text" id="p-name" class="form-control" required placeholder="Ví dụ: Tai nghe Sony">
+        </div>
+        <div class="form-group">
+          <label>Giá bán (VNĐ) *</label>
+          <input type="number" id="p-price" class="form-control" required placeholder="Vd: 1500000">
+        </div>
+        <div class="form-group">
+          <label>Hình ảnh (URL)</label>
+          <input type="url" id="p-image" class="form-control" placeholder="https://...">
+        </div>
+        <div class="form-group" style="display: flex; gap: 1rem;">
+          <div style="flex: 1;">
+            <label>Phân loại</label>
+            <input type="text" id="p-category" class="form-control" placeholder="Ví dụ: Phụ kiện">
+          </div>
+          <div style="flex: 1;">
+            <label>Tồn kho</label>
+            <input type="number" id="p-stock" class="form-control" required placeholder="Ví dụ: 50" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Mô tả ngắn</label>
+          <textarea id="p-desc" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" id="btn-save-product" class="btn btn-primary" style="width: 100%;">Lưu sản phẩm</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Xem Đơn Hàng -->
+  <div class="modal" id="orders-modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="orders-modal-title">Lịch sử mua hàng</h2>
+        <button class="close-btn" onclick="document.getElementById('orders-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="table-container" style="box-shadow: none; padding: 0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              <th>Ngày mua</th>
+              <th>Trạng thái</th>
+              <th>Tổng tiền</th>
+            </tr>
+          </thead>
+          <tbody id="user-orders-list">
+            <!-- Render from JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/data.js"></script>
+  <script>
+    const user = getCurrentUser();
+    if (!user || user.role !== 'admin') {
+      window.location.href = 'login.html';
+    }
+
+    let globalProducts = [];
+    let globalOrders = [];
+    let globalCustomers = [];
+    let editProductId = null;
+
+    const modal = document.getElementById('product-modal');
+    const btnAdd = document.getElementById('btn-add-product');
+    const btnClose = document.getElementById('close-modal');
+    const form = document.getElementById('product-form');
+    const modalTitle = document.getElementById('modal-title');
+    const loader = document.getElementById('admin-loading');
+
+    function showLoader(show) {
+      loader.style.display = show ? 'flex' : 'none';
+    }
+
+    btnAdd.addEventListener('click', () => {
+      form.reset();
+      editProductId = null;
+      modalTitle.textContent = 'Thêm Sản phẩm';
+      modal.classList.add('active');
+    });
+
+    window.editProduct = function(id) {
+      const product = globalProducts.find(p => p.id === id);
+      if (!product) return;
+
+      document.getElementById('p-name').value = product.name;
+      document.getElementById('p-price').value = product.price;
+      document.getElementById('p-image').value = product.image;
+      document.getElementById('p-category').value = product.category || 'Khác';
+      document.getElementById('p-stock').value = product.stock;
+      document.getElementById('p-desc').value = product.desc || '';
+
+      editProductId = id;
+      modalTitle.textContent = 'Chỉnh sửa Sản phẩm';
+      modal.classList.add('active');
+    };
+
+    btnClose.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('p-name').value;
+      const price = parseInt(document.getElementById('p-price').value);
+      const image = document.getElementById('p-image').value || 'https://via.placeholder.com/300x200?text=No+Image';
+      const category = document.getElementById('p-category').value || 'Khác';
+      const stock = parseInt(document.getElementById('p-stock').value) || 0;
+      const desc = document.getElementById('p-desc').value;
+
+      const productData = { name, price, image, category, stock, desc };
+      const btn = document.getElementById('btn-save-product');
+      btn.disabled = true;
+      btn.textContent = 'Đang lưu...';
+
+      try {
+        if (editProductId) {
+          await api.updateProduct(editProductId, productData);
+          showToast('Cập nhật sản phẩm thành công');
+        } else {
+          await api.createProduct(productData);
+          showToast('Thêm sản phẩm mới thành công');
+        }
+        modal.classList.remove('active');
+        await renderAdminData();
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Lưu sản phẩm';
+      }
+    });
+
+    window.deleteProduct = async function(id) {
+      if(!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+      try {
+        await api.deleteProduct(id);
+        showToast('Đã xóa sản phẩm');
+        await renderAdminData();
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    };
+
+    async function renderAdminData() {
+      showLoader(true);
+      try {
+        globalProducts = await api.getProducts();
+        globalOrders = await api.getOrders();
+        globalCustomers = await api.getCustomers();
+
+        // Update Stats
+        document.getElementById('stat-products').textContent = globalProducts.length;
+        document.getElementById('stat-orders').textContent = globalOrders.filter(o => o.status !== 'Đã hủy').length;
+
+        const totalRevenue = globalOrders.reduce((sum, o) => {
+          const pay = o.shipping?.paymethod || 'COD';
+          if (o.status === 'Đã hủy') return sum;
+          if (pay === 'Chuyển khoản') return sum + o.total;
+          if (pay === 'COD' && o.status === 'Đã giao') return sum + o.total;
+          return sum;
+        }, 0);
+        document.getElementById('stat-revenue').textContent = formatCurrency(totalRevenue);
+
+        // Render Product Table
+        document.getElementById('admin-product-list').innerHTML = globalProducts.length === 0 ? 
+          '<tr><td colspan="7" class="text-center">Trống</td></tr>' : 
+          globalProducts.map(p => `
+            <tr>
+              <td>#${p.id}</td>
+              <td><img src="${p.image}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
+              <td style="font-weight: 500">${p.name}</td>
+              <td><span class="badge" style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 4px;">${p.category || 'Khác'}</span></td>
+              <td style="${p.stock <= 0 ? 'color: var(--danger-color); font-weight:bold;' : ''}">${p.stock}</td>
+              <td style="color: var(--primary-color); font-weight: 600">${formatCurrency(p.price)}</td>
+              <td>
+                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="editProduct(${p.id})">Sửa</button>
+                <button class="btn btn-danger" style="padding: 0.25rem 0.5rem;" onclick="deleteProduct(${p.id})">Xóa</button>
+              </td>
+            </tr>
+          `).join('');
+
+        // Render Global Orders Table
+        document.getElementById('admin-global-orders-list').innerHTML = globalOrders.length === 0 ? 
+          '<tr><td colspan="5" class="text-center">Trống</td></tr>' : 
+          globalOrders.map(o => {
+            const customerName = o.shipping?.name || 'Khách #' + o.userId;
+            const isCancelled = o.status === 'Đã hủy';
+            return `
+              <tr style="${isCancelled ? 'opacity: 0.6;' : ''}">
+                <td>#${o.id}</td>
+                <td style="font-weight: 500">${customerName}</td>
+                <td>${new Date(o.date).toLocaleString('vi-VN')}</td>
+                <td style="color: var(--primary-color); font-weight: 600">${formatCurrency(o.total)}</td>
+                <td>
+                  <select class="form-control" style="width: auto; padding: 0.2rem;" 
+                          onchange="updateOrderStatus(${o.id}, this.value)" ${isCancelled ? 'disabled' : ''}>
+                    <option value="Chờ xử lý" ${o.status === 'Chờ xử lý' ? 'selected' : ''}>Chờ xử lý</option>
+                    <option value="Đang giao" ${o.status === 'Đang giao' ? 'selected' : ''}>Đang giao</option>
+                    <option value="Đã giao" ${o.status === 'Đã giao' ? 'selected' : ''}>Đã giao</option>
+                    <option value="Đã hủy" ${o.status === 'Đã hủy' ? 'selected' : ''}>Đã hủy</option>
+                  </select>
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+        // Render Customer Table
+        document.getElementById('admin-customer-list').innerHTML = globalCustomers.length === 0 ? 
+          '<tr><td colspan="8" class="text-center">Trống</td></tr>' : 
+          globalCustomers.map(c => `
+            <tr style="${c.isDeleted ? 'opacity: 0.5;' : ''}">
+              <td>#${c.id}</td>
+              <td style="font-weight: 500">${c.name}</td>
+              <td>${c.email}</td>
+              <td>${c.phone}</td>
+              <td>${c.registerDate}</td>
+              <td style="color: var(--primary-color); font-weight: 600">${formatCurrency(c.totalSpent)}</td>
+              <td style="font-weight: 600;">
+                ${c.isDeleted ? '<span style="color:var(--danger-color)">Đã xóa</span>' : (c.isLocked ? '<span style="color:orange">Khóa</span>' : '<span style="color:var(--success-color)">Mở</span>')}
+              </td>
+              <td>
+                <button class="btn btn-primary" style="padding: 0.25rem 0.5rem;" onclick="viewUserOrders(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Đơn</button>
+                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="toggleLockUser(${c.id})" ${c.isDeleted ? 'disabled' : ''}>${c.isLocked ? 'Mở' : 'Khóa'}</button>
+                <button class="btn btn-danger" style="padding: 0.25rem 0.5rem;" onclick="softDeleteUser(${c.id})" ${c.isDeleted ? 'disabled' : ''}>Xóa</button>
+              </td>
+            </tr>
+          `).join('');
+
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi tải dữ liệu: ' + err.message);
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    window.updateOrderStatus = async function(orderId, newStatus) {
+      try {
+        await api.updateOrderStatus(orderId, newStatus);
+        showToast(`Đã chuyển đơn #${orderId} sang "${newStatus}"`);
+        await renderAdminData();
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    };
+
+    window.toggleLockUser = async function(id) {
+      if(!confirm('Thay đổi trạng thái khóa?')) return;
+      try {
+        await api.lockCustomer(id);
+        await renderAdminData();
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    };
+
+    window.softDeleteUser = async function(id) {
+      if(!confirm('Xác nhận xóa tài khoản khách hàng?')) return;
+      try {
+        await api.deleteCustomer(id);
+        showToast('Đã xóa tài khoản');
+        await renderAdminData();
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      }
+    };
+
+    window.viewUserOrders = function(id, name) {
+      const userOrders = globalOrders.filter(o => o.userId === id);
+      const tbody = document.getElementById('user-orders-list');
+      document.getElementById('orders-modal-title').textContent = `Lịch sử: ${name}`;
+
+      tbody.innerHTML = userOrders.length === 0 ? 
+        '<tr><td colspan="4" class="text-center">Chưa có đơn hàng nào</td></tr>' : 
+        userOrders.map(o => `
+          <tr>
+            <td>#${o.id}</td>
+            <td>${new Date(o.date).toLocaleString('vi-VN')}</td>
+            <td><span class="badge" style="background:var(--success-color); color:white; padding:0.1rem 0.4rem; border-radius:4px;">${o.status}</span></td>
+            <td style="color: var(--primary-color); font-weight: 600">${formatCurrency(o.total)}</td>
+          </tr>
+          ${o.shipping ? `
+            <tr style="background: #f8fafc; font-size: 0.85rem;">
+              <td colspan="4"><strong>Giao:</strong> ${o.shipping.name} - ${o.shipping.phone} | <strong>Địa chỉ:</strong> ${o.shipping.address} | <strong>PT:</strong> ${o.shipping.paymethod}</td>
+            </tr>
+          ` : ''}
+        `).join('');
+
+      document.getElementById('orders-modal').classList.add('active');
+    };
+
+    document.addEventListener('DOMContentLoaded', renderAdminData);
+  </script>
+</body>
+</html>

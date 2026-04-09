@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang cá nhân | E-com</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .profile-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">E-com.</a>
+      <nav class="nav-links">
+        <a href="index.html">Sản phẩm</a>
+        <a href="cart.html" class="cart-link">
+          Giỏ hàng
+          <span class="cart-count" id="cart-count" style="display: none;">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="profile-container">
+      <div id="profile-content">
+        <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+          Đang tải thông tin cá nhân...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 E-com.</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/data.js"></script>
+  <script>
+    const userRole = getCurrentUser()?.role;
+    if (!userRole || userRole !== 'customer') {
+      window.location.href = 'login.html';
+    }
+
+    async function renderProfile() {
+      const container = document.getElementById('profile-content');
+      
+      try {
+        const user = await api.getMe();
+        const orders = await api.getOrders();
+
+        container.innerHTML = `
+          <div class="profile-header">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Trang cá nhân</h1>
+            <p style="color: var(--text-muted);">Chào ${user.name}, quản lý thông tin và theo dõi đơn hàng của bạn</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem;">
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: var(--radius); height: fit-content;">
+              <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Thông tin của bạn</h2>
+              <div style="margin-bottom: 0.5rem;"><strong>Họ tên:</strong> <span>${user.name}</span></div>
+              <div style="margin-bottom: 0.5rem;"><strong>Email:</strong> <span>${user.email}</span></div>
+              <div style="margin-bottom: 0.5rem;"><strong>Điện thoại:</strong> <span>${user.phone || '(Chưa cập nhật)'}</span></div>
+              <div style="margin-bottom: 0.5rem;"><strong>Ngày tham gia:</strong> <span>${user.registerDate || '...'}</span></div>
+              <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                <strong>Tổng chi tiêu:</strong> <span style="color: var(--primary-color); font-weight: bold;">${formatCurrency(user.totalSpent)}</span>
+              </div>
+            </div>
+
+            <div>
+              <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Lịch sử Đơn hàng</h2>
+              <div class="table-container" style="box-shadow: none; padding: 0;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Mã đơn</th>
+                      <th>Ngày</th>
+                      <th>Trạng thái</th>
+                      <th>Tổng tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody id="prof-orders-list">
+                    ${orders.length === 0 ? 
+                      '<tr><td colspan="4" class="text-center">Chưa có đơn hàng nào.</td></tr>' : 
+                      orders.map(o => `
+                        <tr>
+                          <td>#${o.id}</td>
+                          <td>${new Date(o.date).toLocaleDateString('vi-VN')}</td>
+                          <td>
+                            <span style="background: ${o.status === 'Đã hủy' ? 'var(--danger-color)' : (o.status === 'Đã giao' ? 'var(--success-color)' : 'orange')}; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">
+                              ${o.status || 'Chờ xử lý'}
+                            </span>
+                          </td>
+                          <td style="color: var(--primary-color); font-weight: 600">${formatCurrency(o.total)}</td>
+                        </tr>
+                      `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">Lỗi tải thông tin: ${err.message}</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderProfile);
+  </script>
+</body>
+</html>

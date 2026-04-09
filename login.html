@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xác thực | E-com</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 160px);
+    }
+    .auth-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 450px;
+    }
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.3s;
+    }
+    .auth-tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .error-msg {
+      color: var(--danger-color);
+      font-size: 0.88rem;
+      margin-top: 0.75rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <a href="index.html" class="logo">E-com.</a>
+      <nav class="nav-links">
+        <a href="index.html">Sản phẩm</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Đăng nhập</div>
+          <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Đăng ký</div>
+        </div>
+
+        <!-- Login Form -->
+        <form id="form-login" class="auth-form active">
+          <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Chào mừng trở lại!</h2>
+          <div class="form-group">
+            <label>Email hoặc username</label>
+            <input type="text" id="login-email" class="form-control" required placeholder="nva@gmail.com hoặc admin">
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="login-password" class="form-control" required placeholder="Mật khẩu (ví dụ: 123)">
+          </div>
+          <div class="error-msg" id="login-error"></div>
+          <button type="submit" class="btn btn-primary" id="btn-login" style="width: 100%; margin-top: 0.5rem;">Đăng nhập</button>
+          <div class="hint">Tài khoản mẫu: nva@gmail.com / 123 (Khách) hoặc admin / 123 (Admin)</div>
+        </form>
+
+        <!-- Register Form -->
+        <form id="form-register" class="auth-form">
+          <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Tạo tài khoản mới</h2>
+          <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" id="reg-name" class="form-control" required placeholder="Nguyễn Văn X">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" class="form-control" required placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="text" id="reg-phone" class="form-control" placeholder="09xxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="reg-password" class="form-control" required placeholder="Tối thiểu 3 ký tự">
+          </div>
+          <div class="error-msg" id="reg-error"></div>
+          <button type="submit" class="btn btn-primary" id="btn-register" style="width: 100%; margin-top: 0.5rem;">Đăng ký</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 E-com.</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/data.js"></script>
+  <script>
+    // Nếu đã đăng nhập → điều hướng ngay
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      if (user) {
+        window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+      }
+    });
+
+    function switchTab(tab) {
+      ['login', 'register'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+        document.getElementById(`form-${t}`).classList.toggle('active', t === tab);
+      });
+    }
+
+    function setLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Đang xử lý...' : btn.dataset.label;
+    }
+
+    // ── LOGIN ────────────────────────────
+    const btnLogin = document.getElementById('btn-login');
+    btnLogin.dataset.label = 'Đăng nhập';
+
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '';
+      setLoading(btnLogin, true);
+
+      try {
+        const user = await api.login(email, pass);
+        window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        setLoading(btnLogin, false);
+      }
+    });
+
+    // ── REGISTER ─────────────────────────
+    const btnReg = document.getElementById('btn-register');
+    btnReg.dataset.label = 'Đăng ký';
+
+    document.getElementById('form-register').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name     = document.getElementById('reg-name').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const phone    = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const errEl    = document.getElementById('reg-error');
+      errEl.textContent = '';
+
+      if (password.length < 3) {
+        errEl.textContent = 'Mật khẩu phải có ít nhất 3 ký tự.';
+        return;
+      }
+      setLoading(btnReg, true);
+
+      try {
+        await api.register(name, email, phone, password);
+        window.location.href = 'index.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        setLoading(btnReg, false);
+      }
+    });
+  </script>
+</body>
+</html>
